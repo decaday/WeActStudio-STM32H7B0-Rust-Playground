@@ -1,5 +1,7 @@
 [target.thumbv7em-none-eabihf]
-runner = 'probe-rs run --chip STM32H7B0VBTx'
+runner = 'probe-rs run  --chip STM32H7B0VBTxxxx --chip-description-path STM32H7X_Series.yaml'
+
+# runner = 'F:/Projects/16-stm32/probe-rs/target/debug/probe-rs.exe run --chip STM32H7B0VBTxxxx --chip-description-path STM32H7X_Series.yaml'
 
 [build]
 target = "thumbv7em-none-eabihf" # Cortex-M4F and Cortex-M7F (with FPU)

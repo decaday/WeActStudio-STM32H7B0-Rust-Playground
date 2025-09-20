@@ -1,0 +1,29 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "probe-rs-debug",
+            "request": "launch",
+            "name": "probe-rs Test",
+            "cwd": "${workspaceFolder}",
+            "connectUnderReset": true,
+            "chip": "STM32H7B0VBTx",
+            // "chipDescriptionPath": "STM32H7X_Series.yaml",
+            "flashingConfig": {
+                "flashingEnabled": true,
+                "haltAfterReset": true
+            },
+            "coreConfigs": [
+                {
+                    "rttEnabled": true,
+                    "coreIndex": 0,
+                    "svdFile": "STM32H7B0.svd",
+                    "programBinary": "bootloader/target/thumbv7em-none-eabihf/debug/stm32h7b0-w25q64-bootloader"
+                }
+            ]
+        }
+    ]
+}
