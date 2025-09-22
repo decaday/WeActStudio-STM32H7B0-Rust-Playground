@@ -17,15 +17,20 @@ use embedded_graphics::{
     prelude::*,
 };
 use mousefood::prelude::*;
-use ratatui::widgets::{Block, Paragraph, Wrap};
+
+// ---- Ratatui imports for the weather example ----
+use ratatui::widgets::{Bar, BarChart, BarGroup};
 use ratatui::{Frame, Terminal, style::*};
+use ratatui::text::Line;
+
 
 extern crate alloc;
 // use embedded_alloc::TlsfHeap as Heap;
 use embedded_alloc::LlffHeap as Heap;
 #[global_allocator]
 static HEAP: Heap = Heap::empty();
-use alloc::boxed::Box;
+use alloc::{boxed::Box, format};
+use alloc::vec::Vec;
 
 
 #[embassy_executor::main]
@@ -81,17 +86,17 @@ async fn main(_spawner: Spawner) {
 
     let spi = Spi::new_txonly(p.SPI4, p.PE12, p.PE14, p.DMA1_CH0, config); // p.DMA1_CH0
     let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new_no_delay(
-        spi, 
+        spi,
         cs
     ).unwrap();
 
     let mut disp = st7735_lcd::ST7735::new(
-        spi_device, 
-        dc, 
-        DummyPin {}, 
-        false, 
-        true, 
-        160, 
+        spi_device,
+        dc,
+        DummyPin {},
+        false,
+        true,
+        160,
         80
     );
 
@@ -106,7 +111,7 @@ async fn main(_spawner: Spawner) {
         flush_callback: Box::new(move |disp: &mut st7735_lcd::ST7735<embedded_hal_bus::spi::ExclusiveDevice<Spi<'_, embassy_stm32::mode::Async>, Output<'_>, embedded_hal_bus::spi::NoDelay>, Output<'_>, DummyPin>| {
             // disp.clear(Rgb565::BLACK).unwrap();
         }),
-        font_regular: embedded_graphics_unicodefonts::mono_7x13_atlas(),
+        font_regular: embedded_graphics_unicodefonts::mono_6x10_atlas(),
         ..Default::default()
     };
     let backend: EmbeddedBackend<_, _> =
@@ -124,14 +129,62 @@ async fn main(_spawner: Spawner) {
 
 }
 
+// ---- New data and functions for the weather example ----
+
+// Using fixed Celsius temperature data
+const TEMPERATURES_C: [u8; 8] = [18, 20, 22, 26, 28, 27, 24, 21];
+
+/// The main drawing function, now renders the weather chart across the whole screen
 fn draw(frame: &mut Frame) {
-    let text = "Ratatui on embedded devices!";
-    let paragraph = Paragraph::new(text.dark_gray()).wrap(Wrap { trim: true });
-    let bordered_block = Block::bordered()
-        .border_style(Style::new().yellow())
-        .title("Mousefood");
-    frame.render_widget(paragraph.block(bordered_block), frame.area());
+    frame.render_widget(
+        vertical_barchart(&TEMPERATURES_C),
+        frame.area() // Use the whole frame area
+    );
 }
+
+/// Create a vertical bar chart from the temperatures data.
+fn vertical_barchart(data: &[u8]) -> BarChart<'_> {
+    let bars: Vec<Bar> = data
+        .iter()
+        .enumerate()
+        .map(|(i, value)| vertical_bar(i, value))
+        .collect();
+
+    BarChart::default()
+        // Removed the block/border to save space
+        .data(BarGroup::default().bars(&bars))
+        .bar_width(3) // Slightly wider bars
+        .bar_gap(1)
+        .max(35)       // Set a max value appropriate for Celsius
+}
+
+/// Creates a single vertical bar for the chart
+fn vertical_bar<'a>(hour_index: usize, temperature: &u8) -> Bar<'a> {
+    Bar::default()
+        .value(u64::from(*temperature))
+        .label(Line::from(format!("H{hour_index}"))) // Compact label
+        .text_value(format!("{temperature}°")) // Show temperature on the bar
+        .style(temperature_style(*temperature))
+        .value_style(
+            temperature_style(*temperature)
+            .patch(Style::new().bg(Color::Black)) // Ensure readability
+        )
+}
+
+/// Creates a yellow-to-red style based on the Celsius temperature value
+fn temperature_style(value: u8) -> Style {
+    // Adjusted for a Celsius range of 15°C (yellow) to 30°C (red)
+    let clamped_value = value.clamp(15, 30);
+    // As value goes from 15 to 30, ratio goes from 0.0 to 1.0
+    let ratio = f64::from(clamped_value - 15) / 15.0;
+    // As ratio goes from 0.0 to 1.0, green goes from 255 to 0
+    let green = (255.0 * (1.0 - ratio)) as u8;
+    let color = Color::Rgb(255, green, 0);
+    Style::new().fg(color)
+}
+
+
+// ---- Unchanged DummyPin implementation ----
 
 pub struct DummyPin {}
 impl embedded_hal_1::digital::ErrorType for DummyPin {

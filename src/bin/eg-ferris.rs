@@ -62,7 +62,7 @@ async fn main(_spawner: Spawner) {
 
     let config: spi::Config = Default::default();
 
-    let spi = Spi::new_blocking_txonly(p.SPI4, p.PE12, p.PE14, config); // p.DMA1_CH0
+    let spi = Spi::new_txonly(p.SPI4, p.PE12, p.PE14, p.DMA1_CH0, config); // p.DMA1_CH0
     let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new_no_delay(
         spi, 
         cs
