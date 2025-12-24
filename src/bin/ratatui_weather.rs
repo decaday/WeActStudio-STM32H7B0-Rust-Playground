@@ -70,13 +70,12 @@ async fn main(_spawner: Spawner) {
     let p = embassy_stm32::init(config);
 
     // Initialize HEAP
-    {
-        use core::mem::MaybeUninit;
-        use core::ptr::addr_of_mut;
-        const HEAP_SIZE: usize = 128_000;
-        static mut HEAP_MEM: [MaybeUninit<u8>; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
-        unsafe { HEAP.init(addr_of_mut!(HEAP_MEM) as usize, HEAP_SIZE) }
-    };
+    use core::mem::MaybeUninit;
+    use core::ptr::addr_of_mut;
+    const HEAP_SIZE: usize = 128_000;
+    static mut HEAP_MEM: [MaybeUninit<u8>; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
+    unsafe { HEAP.init(addr_of_mut!(HEAP_MEM) as usize, HEAP_SIZE) };
+    
 
     let dc = Output::new(p.PE13, Level::Low, Speed::High);
     let cs = Output::new(p.PE11, Level::Low, Speed::High);
@@ -123,8 +122,9 @@ async fn main(_spawner: Spawner) {
     // Run an infinite loop, where widgets will be rendered
 
     loop {
-        Timer::after_millis(100).await;
+        Timer::after_millis(1000).await;
         terminal.draw(draw).unwrap();
+        info!("Heap used: {} free: {}", HEAP.used(), HEAP.free());
     }
 
 }

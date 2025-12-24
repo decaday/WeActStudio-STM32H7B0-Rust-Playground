@@ -1,5 +1,6 @@
 [target.thumbv7em-none-eabihf]
-runner = 'probe-rs run  --chip STM32H7B0VBTxxxx --chip-description-path STM32H7X_Series.yaml'
+runner = 'probe-rs run --chip STM32H7B0VBTxxxx --chip-description-path STM32H7X_Series.yaml'
+# runner = 'probe-rs run --chip STM32H7B0VBTx'
 
 # runner = 'F:/Projects/16-stm32/probe-rs/target/debug/probe-rs.exe run --chip STM32H7B0VBTxxxx --chip-description-path STM32H7X_Series.yaml'
 
