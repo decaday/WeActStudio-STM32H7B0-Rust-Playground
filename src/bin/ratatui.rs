@@ -78,9 +78,10 @@ async fn main(_spawner: Spawner) {
     let cs = Output::new(p.PE11, Level::Low, Speed::High);
     let _lcd_led = Output::new(p.PE10, Level::Low, Speed::Low);
 
-    let config: spi::Config = Default::default();
+    let mut spi_config: spi::Config = Default::default();
+    spi_config.frequency = Hertz(24_000_000);
 
-    let spi = Spi::new_txonly(p.SPI4, p.PE12, p.PE14, p.DMA1_CH0, config); // p.DMA1_CH0
+    let spi = Spi::new_txonly(p.SPI4, p.PE12, p.PE14, p.DMA1_CH0, spi_config); // p.DMA1_CH0
     let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new_no_delay(
         spi, 
         cs

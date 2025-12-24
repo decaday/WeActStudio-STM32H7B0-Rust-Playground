@@ -61,7 +61,8 @@ async fn main(_spawner: Spawner) {
     let cs = Output::new(p.PE11, Level::Low, Speed::High);
     let mut lcd_led = Output::new(p.PE10, Level::Low, Speed::Low);
 
-    let spi_config: spi::Config = Default::default();
+    let mut spi_config: spi::Config = Default::default();
+    spi_config.frequency = Hertz(24_000_000);
 
     let spi = Spi::new_txonly(p.SPI4, p.PE12, p.PE14, p.DMA1_CH0, spi_config);
     let spi_bus = Mutex::<NoopRawMutex, _>::new(spi);
@@ -69,7 +70,9 @@ async fn main(_spawner: Spawner) {
     let mut display: ST7735<Display160x80Type2, _, _> = ST7735::new(spi_dev, dc);
 
     display.init(&mut Delay).await.unwrap();
-    display.clear(Rgb565::BLACK).await.unwrap();
+
+    // We don't clear here, because `clear` is too slow
+    // display.clear(Rgb565::BLACK).await.unwrap();
 
     let fb = Framebuffer::new();
     let shared_fb = SHARED_FB.init(Mutex::new(fb));
